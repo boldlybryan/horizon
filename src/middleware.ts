@@ -1,4 +1,4 @@
-import { auth, isAuthDisabled } from "@/lib/auth";
+import { isAuthDisabled } from "@/lib/auth-config";
 import { NextRequest, NextResponse } from "next/server";
 
 const protectedPagePrefixes = ["/deploy", "/dashboard", "/success"];
@@ -10,6 +10,17 @@ function isProtectedPath(pathname: string): boolean {
   }
 
   return protectedApiPrefixes.some((prefix) => pathname.startsWith(prefix));
+}
+
+function hasSessionCookie(request: NextRequest): boolean {
+  return request.cookies.getAll().some((cookie) => {
+    const name = cookie.name;
+    return (
+      name === "better-auth.session_token" ||
+      name === "__Secure-better-auth.session_token" ||
+      name.endsWith("better-auth.session_token")
+    );
+  });
 }
 
 export async function middleware(request: NextRequest) {
@@ -26,11 +37,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const session = await auth.api.getSession({
-    headers: request.headers,
-  });
-
-  if (session) {
+  if (hasSessionCookie(request)) {
     return NextResponse.next();
   }
 

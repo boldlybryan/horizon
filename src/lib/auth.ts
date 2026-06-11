@@ -1,7 +1,17 @@
 import { betterAuth } from "better-auth";
 import { nextCookies } from "better-auth/next-js";
 
+import {
+  getDevUser,
+  isAuthDisabled,
+  type SessionUser,
+} from "@/lib/auth-config";
+
 function getAuthSecret(): string {
+  if (isAuthDisabled()) {
+    return "horizon-auth-disabled-placeholder-secret-32ch";
+  }
+
   const fromEnv = process.env.BETTER_AUTH_SECRET;
   if (fromEnv) {
     return fromEnv;
@@ -50,11 +60,7 @@ export const auth = betterAuth({
       : {},
 });
 
-export type SessionUser = {
-  id: string;
-  email: string;
-  name: string;
-};
+export type { SessionUser };
 
 export function toSessionUser(user: {
   id: string;
@@ -68,18 +74,7 @@ export function toSessionUser(user: {
   };
 }
 
-/** Bypass Google OAuth when DISABLE_AUTH=true (use only for trusted internal deployments). */
-export function isAuthDisabled(): boolean {
-  return process.env.DISABLE_AUTH === "true";
-}
-
-export function getDevUser(): SessionUser {
-  return {
-    id: "dev-user",
-    email: process.env.DEV_USER_EMAIL || "dev@localhost",
-    name: process.env.DEV_USER_NAME || "Dev User",
-  };
-}
+export { getDevUser, isAuthDisabled };
 
 export async function getRequestUser(headers: Headers): Promise<SessionUser | null> {
   if (isAuthDisabled()) {
