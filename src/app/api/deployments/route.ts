@@ -1,16 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { auth } from "@/lib/auth";
+import { getRequestUser } from "@/lib/auth";
 import { VercelApiError } from "@/lib/vercel/client";
 import { listHorizonDeployments } from "@/lib/vercel/list-deployments";
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth.api.getSession({
-      headers: request.headers,
-    });
-
-    if (!session?.user) {
+    const user = await getRequestUser(request.headers);
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

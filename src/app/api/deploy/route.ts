@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-import { auth, toSessionUser } from "@/lib/auth";
+import { getRequestUser } from "@/lib/auth";
 import { normalizeUpload } from "@/lib/files/normalize-upload";
 import { normalizeSlug, validateSlug } from "@/lib/slug";
 import { assignDeploymentAlias } from "@/lib/vercel/assign-alias";
@@ -37,11 +37,8 @@ function mapVercelError(error: VercelApiError): string {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth.api.getSession({
-      headers: request.headers,
-    });
-
-    if (!session?.user) {
+    const user = await getRequestUser(request.headers);
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -69,7 +66,6 @@ export async function POST(request: NextRequest) {
     const uploadFiles = prepareUploadFiles(normalizedFiles);
     await uploadFilesToVercel(uploadFiles);
 
-    const user = toSessionUser(session.user);
     const deployment = await createDeployment({
       slug,
       files: toFileReferences(uploadFiles),

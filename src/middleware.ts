@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { auth, isAuthDisabled } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 
 const protectedPagePrefixes = ["/deploy", "/dashboard", "/success"];
@@ -14,6 +14,13 @@ function isProtectedPath(pathname: string): boolean {
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  if (isAuthDisabled()) {
+    if (pathname === "/login") {
+      return NextResponse.redirect(new URL("/deploy", request.url));
+    }
+    return NextResponse.next();
+  }
 
   if (!isProtectedPath(pathname)) {
     return NextResponse.next();

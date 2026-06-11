@@ -27,6 +27,8 @@ npm run dev
 Optional:
 
 - `GOOGLE_ALLOWED_DOMAIN` to restrict sign-in to a Workspace domain
+- `DISABLE_AUTH=true` — skip Google OAuth entirely (trusted internal use only)
+- `DEV_USER_EMAIL` / `DEV_USER_NAME` — identity used in deployment meta when auth is disabled
 
 ## Google OAuth redirect
 

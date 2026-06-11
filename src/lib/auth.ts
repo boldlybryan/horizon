@@ -67,3 +67,29 @@ export function toSessionUser(user: {
     name: user.name ?? user.email,
   };
 }
+
+/** Bypass Google OAuth when DISABLE_AUTH=true (use only for trusted internal deployments). */
+export function isAuthDisabled(): boolean {
+  return process.env.DISABLE_AUTH === "true";
+}
+
+export function getDevUser(): SessionUser {
+  return {
+    id: "dev-user",
+    email: process.env.DEV_USER_EMAIL || "dev@localhost",
+    name: process.env.DEV_USER_NAME || "Dev User",
+  };
+}
+
+export async function getRequestUser(headers: Headers): Promise<SessionUser | null> {
+  if (isAuthDisabled()) {
+    return getDevUser();
+  }
+
+  const session = await auth.api.getSession({ headers });
+  if (!session?.user) {
+    return null;
+  }
+
+  return toSessionUser(session.user);
+}
